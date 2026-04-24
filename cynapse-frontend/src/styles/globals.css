@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-brand: #0052FF;
+  --color-danger: #BA1A1A;
+  --color-warning: #F39C12;
+  --color-safe: #006A69;
+  --color-surface: #F7F9FB;
+  --color-panel: #FFFFFF;
+  --color-border: #E0E3E5;
+  --color-text-primary: #191C1E;
+  --color-text-muted: #434656;
+}
+
+.dark {
+  --color-brand: #64748b;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-safe: #10b981;
+  --color-surface: #0f172a;
+  --color-panel: #1e293b;
+  --color-border: #334155;
+  --color-text-primary: #e2e2e8;
+  --color-text-muted: #bbc9cf;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-surface); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+
+
+.gauge-ring {
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+/* Ticker animation */
+@keyframes ticker-scroll {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+.ticker-item { animation: ticker-scroll 30s linear infinite; }
+
+/* Tab underline */
+.tab-active {
+  border-bottom: 2px solid var(--color-brand);
+  color: var(--color-brand);
+}
+
+/* Card hover */
+.card-hover {
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.card-hover:hover {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 16px rgba(26, 86, 219, 0.15);
+}
