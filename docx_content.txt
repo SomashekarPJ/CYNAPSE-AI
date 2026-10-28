@@ -1,0 +1,266 @@
+⚡ CYNAPSE AI
+Cyber Neural Adaptive Protection System Engine
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TEAMMATE 2  ·  BACKEND & AI CORE LEAD
+Nexora 2026  ·  AIEMS Bengaluru  ·  12-Hour Sprint
+Git Branch:  feat/backend-ai-teammate2
+
+🎯  YOUR ROLE: Build the entire AI brain of CYNAPSE AI — 3 FastAPI endpoints powered by
+     original AI logic for visual clone detection, chatbot impersonation analysis, and
+     pre-transfer risk scoring. You are what makes the product actually work.
+
+📋  RULES REMINDER: Implement ALL logic yourself during the hackathon. You may read
+     official docs for Groq, Gemini, and FastAPI — but write every line from scratch.
+
+🔗  Share your API endpoint schema with Teammate 1 by Hour 06 so they can wire the UI.
+
+01 · YOUR ARCHITECTURE — HOW CYNAPSE THINKS
+CYNAPSE AI uses a multi-layer analysis pipeline for each feature. Every request passes through at least two independent analysis layers before a verdict is returned. This multi-layer approach is what makes the system trustworthy — and what will impress judges asking about accuracy and reliability.
+
+CYNAPSE AI — BACKEND ARCHITECTURE OVERVIEW
+
+  HTTP / WebSocket Request
+        │
+        ▼
+  FastAPI Router  ──────────────────────────────────────────────┐
+        │                                                        │
+   ┌────┴────────────────────┐              Redis Cache         │
+   │     AI Pipeline Layer   │         (cache repeat queries)   │
+   │  ┌──────────────────┐   │                                  │
+   │  │  Groq LLM Agent  │   │◄── cache hit ──────────────────►│
+   │  │  Pattern Engine  │   │                                  │
+   │  │  Gemini Agent    │   │                                  │
+   │  └──────────────────┘   │                                  │
+   └────────────┬────────────┘                                  │
+                │                                                │
+        Risk Scorer (0–100)                                      │
+                │                                                │
+        PostgreSQL  (store all analyses)                         │
+                │                                                │
+        WebSocket Broadcaster ──► All connected dashboards ──────┘
+
+02 · YOUR 3 FEATURES — BACKEND LOGIC
+FEATURE A — Phishing Site Visual Clone Detector
+The backend captures a screenshot of the suspicious URL using a headless browser, extracts a visual hash, and compares it against a curated database of legitimate banking and government site fingerprints. A second layer uses Groq to analyse any text extracted from the page for phishing indicators.
+
+ENDPOINT:   POST  /analyze/visual-clone
+INPUT:      { url: string }
+OUTPUT:     { similarity_score: int (0-100), verdict: string,
+              matched_site: string, risk_factors: list, screenshot_url: string }
+
+Logic you need to implement (from scratch):
+Use Playwright or Selenium to render the suspicious URL in a headless browser and capture screenshot
+Extract perceptual hash (pHash) of the screenshot using imagehash Python library
+Compare pHash against your pre-built fingerprint DB of top 30 Indian banking/govt sites
+Calculate Hamming distance between hashes — convert to 0–100 similarity score
+Layer 2: extract all visible text from page using BeautifulSoup + run Groq analysis
+Combine visual score + text analysis score into final weighted verdict
+Store result in PostgreSQL threats table. Broadcast to WebSocket channel.
+
+FEATURE B — AI Chatbot Impersonation Detector
+The backend analyses a conversation transcript for statistical and linguistic signals that distinguish human writing from AI-generated responses. It checks for templated opening phrases, unnatural consistency in response length, absence of genuine contextual memory across turns, and overuse of formal phrasing patterns.
+
+ENDPOINT:   POST  /analyze/chatbot
+INPUT:      { conversation: string }
+OUTPUT:     { bot_probability: int (0-100), verdict: string,
+              evidence: [ { signal: string, explanation: string } ] }
+
+Logic you need to implement (from scratch):
+Split conversation into turns and label each as [THEM] or [YOU]
+Extract [THEM] turns only — these are the suspected bot responses to analyse
+Run Groq LLM analysis with a carefully designed prompt: ask it to identify bot-like patterns
+Separately run pattern matching: check for templated phrases, response length variance, formality score
+Score each signal 0–1 and weight them into a final bot_probability score
+Return evidence list: top 5 signals with plain-English explanation for each
+Log to PostgreSQL. No user data retained — store only the analysis output.
+
+FEATURE C — Pre-Transfer Shield
+The backend validates a payment recipient identifier (UPI VPA, phone number, or bank account) against a scam registry, checks VPA pattern against known fraud templates, assesses account age via available signals, and returns a 0–100 risk score with specific risk factors.
+
+ENDPOINT:   POST  /analyze/pre-transfer
+INPUT:      { type: 'upi'|'phone'|'account', value: string, amount: int }
+OUTPUT:     { risk_score: int (0-100), verdict: string,
+              risk_factors: list[string], recommendation: string }
+
+Logic you need to implement (from scratch):
+Validate input format: UPI VPA regex, phone number format (10-digit Indian), bank account pattern
+Check against your scam registry (a JSON file you build with known fraudulent patterns)
+For UPI VPAs: score the @handle domain (suspicious handles like @ybl-new, @ibl-pay, etc.)
+Run Groq analysis on the VPA/phone against known scam patterns in your Indian fraud database
+Check if amount is a round-number above ₹5000 (common in advance-fee fraud)
+Combine all signals into a weighted 0–100 risk score
+Return risk_factors list explaining each red flag in plain English
+
+03 · 12-HOUR SPRINT SCHEDULE
+
+HOUR BLOCK
+YOUR TASK
+MODULE
+STATUS
+Hr 00–01
+Setup: init FastAPI project, PostgreSQL schema, Redis config, folder structure
+Setup
+⬜ TODO
+Hr 01–03
+Build Feature A backend: Visual Clone Detector — screenshot capture + AI similarity engine
+Feature A
+⬜ TODO
+Hr 03–05
+Build Feature B backend: AI Chatbot Impersonation Detector — NLP analysis pipeline
+Feature B
+⬜ TODO
+Hr 05–07
+Build Feature C backend: Pre-Transfer Shield — VPA pattern engine + scam registry lookup
+Feature C
+⬜ TODO
+Hr 07–08
+Add WebSocket server: /ws/threats endpoint — broadcast threat events in real time
+WebSocket
+⬜ TODO
+Hr 08–09
+Wire all 3 endpoints — test with Postman/curl. Share endpoint schema with Teammate 1.
+API Testing
+⬜ TODO
+Hr 09–10
+Add voice clone detector endpoint (stretch goal) + Redis caching for Feature A
+Stretch
+⬜ TODO
+Hr 10–11
+Merge with Teammate 1 frontend. Fix CORS issues. End-to-end test all 3 features.
+Integration
+⬜ TODO
+Hr 11–12
+Deploy to Railway. Test live endpoints. Prepare Postman collection for demo backup.
+Deploy
+⬜ TODO
+
+04 · API ENDPOINT CONTRACT
+Share this table with Teammate 1 by Hour 06. They will use these endpoints to wire the frontend. Do not change the response field names once shared.
+
+ENDPOINT
+METHOD
+AUTH
+RESPONSE FIELDS
+/analyze/visual-clone
+POST
+None
+similarity_score, verdict, matched_site, risk_factors, screenshot_url
+/analyze/chatbot
+POST
+None
+bot_probability, verdict, evidence (list of signal + explanation)
+/analyze/pre-transfer
+POST
+None
+risk_score, verdict, risk_factors (list), recommendation
+/analyze/voice-clone
+POST
+None
+clone_probability, verdict, original_voice_match (stretch goal)
+/ws/threats
+WebSocket
+None
+{ type, verdict, risk_score, scam_type, timestamp }
+/health
+GET
+None
+{ status: ok, version: 1.0 }
+
+05 · INSTALL COMMANDS — RUN AT HOUR 00
+# Create and activate virtual environment
+python -m venv cynapse-env
+source cynapse-env/bin/activate   (Mac/Linux)
+cynapse-env\Scripts\activate      (Windows)
+
+# Core FastAPI stack
+pip install fastapi uvicorn python-dotenv asyncpg redis
+
+# AI and NLP libraries
+pip install groq google-generativeai
+pip install beautifulsoup4 httpx
+
+# Image analysis (Feature A)
+pip install imagehash Pillow playwright
+playwright install chromium
+
+# Utilities
+pip install python-multipart pydantic websockets
+
+📚  REFERENCE DOCS (read only — write all logic yourself):
+     FastAPI         →  fastapi.tiangolo.com/tutorial
+     Groq API        →  console.groq.com/docs
+     Gemini API      →  aistudio.google.com/app/apikey (get free key)
+     imagehash       →  github.com/JohannesBuchner/imagehash (README only)
+     Playwright      →  playwright.dev/python/docs/api/class-page
+     Redis Python    →  redis.io/docs/latest/develop/connect/clients/python
+
+06 · DATABASE SCHEMA — POSTGRESQL
+CREATE TABLE threats (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    feature      VARCHAR(30),    -- 'visual_clone' | 'chatbot' | 'pre_transfer'
+    input_hash   VARCHAR(64),    -- SHA-256 of input (no raw user data stored)
+    verdict      VARCHAR(20),    -- 'SAFE' | 'SUSPICIOUS' | 'CRITICAL'
+    risk_score   INTEGER,        -- 0 to 100
+    evidence     JSONB,          -- { signals: [...], factors: [...] }
+    created_at   TIMESTAMP DEFAULT NOW()
+);
+
+-- No personal user data is stored. Only anonymised analysis outputs.
+
+07 · RISK SCORING — YOUR SCORING STANDARD
+All 3 features must return a risk_score between 0 and 100 using this shared scale. This is how Teammate 1 knows which colour to display.
+
+SCORE RANGE
+LEVEL
+COLOUR TOKEN
+VERDICT STRING
+UI ACTION
+0 – 20
+SAFE
+--color-safe
+SAFE
+Green badge, proceed
+21 – 40
+LOW RISK
+--color-warning (light)
+LOW RISK
+Amber badge, caution
+41 – 65
+MODERATE
+--color-warning
+SUSPICIOUS
+Orange alert, verify first
+66 – 80
+HIGH RISK
+--color-danger (light)
+HIGH RISK
+Red alert, do not proceed
+81 – 100
+CRITICAL
+--color-danger
+CRITICAL
+Full-screen red block
+
+08 · GITHUB WORKFLOW — YOUR BRANCH RULES
+YOUR BRANCH:  feat/backend-ai-teammate2
+
+Push every 90 minutes. Never push broken code to main.
+
+Commit message format:
+  feat(backend): add visual clone detector endpoint with pHash comparison
+  feat(backend): implement chatbot bot-probability scoring pipeline
+  feat(backend): add WebSocket broadcaster for live threat events
+  fix(backend): resolve CORS headers for React dev server
+  test(backend): verify Feature C endpoint with Postman collection
+
+Critical coordination checkpoints:
+Hour 06 — Share endpoint schema table (Section 04) with Teammate 1 via WhatsApp/chat
+Hour 08 — Share your Railway dev URL so Teammate 1 can point Axios at real endpoints
+Hour 10 — Both features must be working end-to-end before merge. Test with real inputs.
+Hour 11 — Final Railway deploy. Share production base URL with all teammates.
+
+⚡  YOU ARE THE ENGINE. Without your backend, there is no product.
+    Every line of AI logic must be written by you during this hackathon.
+    Use official docs for reference. Design your own prompts, your own scoring.
+    Communicate with Teammate 1 at Hours 06 and 08. Do not go dark.
+    CYNAPSE AI wins because of the AI intelligence you build today. Go.
